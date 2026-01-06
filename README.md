@@ -53,16 +53,16 @@ Install the opencode-antigravity-auth plugin and add the Antigravity model defin
      "provider": {
        "google": {
          "models": {
-           "antigravity-claude-sonnet-4-5-thinking": {
-             "name": "Claude Sonnet 4.5 Thinking",
-             "limit": { "context": 200000, "output": 64000 },
-             "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
-             "variants": {
-               "low": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 8192 } } } },
-               "medium": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 16384 } } } },
-               "high": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 32768 } } } }
-             }
-           }
+            "antigravity-claude-sonnet-4-5-thinking": {
+              "name": "Claude Sonnet 4.5 Thinking",
+              "limit": { "context": 200000, "output": 64000 },
+              "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+              "variants": {
+                "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+                "medium": { "thinkingConfig": { "thinkingBudget": 16384 } },
+                "high": { "thinkingConfig": { "thinkingBudget": 32768 } }
+              }
+            }
          }
        }
      }
@@ -103,8 +103,8 @@ Create `~/.config/opencode/opencode.json`:
           "limit": { "context": 1048576, "output": 65535 },
           "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
           "variants": {
-            "low": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 8192 } } } },
-            "high": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 32768 } } } }
+            "low": { "thinkingLevel": "low" },
+            "high": { "thinkingLevel": "high" }
           }
         },
         "antigravity-gemini-3-flash": {
@@ -112,9 +112,9 @@ Create `~/.config/opencode/opencode.json`:
           "limit": { "context": 1048576, "output": 65536 },
           "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
           "variants": {
-            "low": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 8192 } } } },
-            "medium": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 16384 } } } },
-            "high": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 32768 } } } }
+            "low": { "thinkingLevel": "low" },
+            "medium": { "thinkingLevel": "medium" },
+            "high": { "thinkingLevel": "high" }
           }
         },
         "antigravity-claude-sonnet-4-5": {
@@ -127,9 +127,9 @@ Create `~/.config/opencode/opencode.json`:
           "limit": { "context": 200000, "output": 64000 },
           "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
           "variants": {
-            "low": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 8192 } } } },
-            "medium": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 16384 } } } },
-            "max": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 32768 } } } }
+            "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "medium": { "thinkingConfig": { "thinkingBudget": 16384 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
           }
         },
         "antigravity-claude-opus-4-5-thinking": {
@@ -137,9 +137,9 @@ Create `~/.config/opencode/opencode.json`:
           "limit": { "context": 200000, "output": 64000 },
           "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
           "variants": {
-            "low": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 8192 } } } },
-            "medium": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 16384 } } } },
-            "max": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 32768 } } } }
+            "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "medium": { "thinkingConfig": { "thinkingBudget": 16384 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
           }
         },
         "gemini-2.5-flash": {
@@ -190,10 +190,9 @@ Models with `antigravity-` prefix use Antigravity quota. **Thinking models suppo
 | `google/antigravity-claude-sonnet-4-5-thinking` | low, medium, max | Claude Sonnet with configurable thinking |
 | `google/antigravity-claude-opus-4-5-thinking` | low, medium, max | Claude Opus with configurable thinking |
 
-**Variant thinking budgets:**
-- `low`: 8,192 tokens
-- `medium`: 16,384 tokens
-- `high`: 32,768 tokens
+**Variant configuration:**
+- **Gemini 3**: Uses `thinkingLevel` string (`"low"`, `"medium"`, `"high"`)
+- **Claude**: Uses `thinkingBudget` number (8192, 16384, 32768 tokens)
 
 **Usage:**
 ```bash
@@ -226,9 +225,9 @@ Models with `-preview` suffix use Gemini CLI quota:
           "limit": { "context": 1048576, "output": 65535 },
           "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
           "variants": {
-            "low": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 8192 } } } },
-            "medium": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 16384 } } } },
-            "high": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 32768 } } } }
+            "low": { "thinkingLevel": "low" },
+            "medium": { "thinkingLevel": "medium" },
+            "high": { "thinkingLevel": "high" }
           }
         },
         "antigravity-gemini-3-flash": {
@@ -236,9 +235,9 @@ Models with `-preview` suffix use Gemini CLI quota:
           "limit": { "context": 1048576, "output": 65536 },
           "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
           "variants": {
-            "low": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 8192 } } } },
-            "medium": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 16384 } } } },
-            "high": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 32768 } } } }
+            "low": { "thinkingLevel": "low" },
+            "medium": { "thinkingLevel": "medium" },
+            "high": { "thinkingLevel": "high" }
           }
         },
         "antigravity-claude-sonnet-4-5": {
@@ -251,9 +250,9 @@ Models with `-preview` suffix use Gemini CLI quota:
           "limit": { "context": 200000, "output": 64000 },
           "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
           "variants": {
-            "low": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 8192 } } } },
-            "medium": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 16384 } } } },
-            "max": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 32768 } } } }
+            "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "medium": { "thinkingConfig": { "thinkingBudget": 16384 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
           }
         },
         "antigravity-claude-opus-4-5-thinking": {
@@ -261,9 +260,9 @@ Models with `-preview` suffix use Gemini CLI quota:
           "limit": { "context": 200000, "output": 64000 },
           "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
           "variants": {
-            "low": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 8192 } } } },
-            "medium": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 16384 } } } },
-            "max": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 32768 } } } }
+            "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "medium": { "thinkingConfig": { "thinkingBudget": 16384 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
           }
         },
         "gemini-2.5-flash": {
@@ -311,29 +310,40 @@ When you define a model with `variants`, OpenCode will show variant options in t
     "limit": { "context": 200000, "output": 64000 },
     "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
     "variants": {
-      "low": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 8192 } } } },
-      "medium": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 16384 } } } },
-      "max": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 32768 } } } }
+      "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+      "medium": { "thinkingConfig": { "thinkingBudget": 16384 } },
+      "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
     }
   }
 }
 ```
 
-### Supported Provider Formats
+### Supported Variant Formats
 
-The plugin accepts thinking configuration in multiple AI SDK formats:
+The plugin accepts different variant formats depending on the model family:
 
-| Format | Structure |
-|--------|-----------|
-| **Google** | `{ google: { thinkingConfig: { thinkingBudget: N } } }` |
-| **Anthropic** | `{ anthropic: { thinking: { type: "enabled", budgetTokens: N } } }` |
-
-### Gemini 3 Budget Mapping
-
-For Gemini 3 models, thinking budget is automatically mapped to thinking level:
-
-| Budget Range | Thinking Level |
+| Model Family | Variant Format |
 |--------------|----------------|
+| **Gemini 3** | `{ "thinkingLevel": "low" \| "medium" \| "high" }` |
+| **Claude** | `{ "thinkingConfig": { "thinkingBudget": N } }` |
+| **Gemini 2.5** | `{ "thinkingConfig": { "thinkingBudget": N } }` |
+
+### Gemini 3 Thinking Levels
+
+Gemini 3 models use string-based thinking levels:
+
+| Level | Description |
+|-------|-------------|
+| `low` | Minimal thinking |
+| `medium` | Balanced thinking |
+| `high` | Maximum thinking |
+
+### Legacy Budget Format (Deprecated)
+
+For Gemini 3 models, the old `thinkingBudget` format is still supported but deprecated:
+
+| Budget Range | Maps to Level |
+|--------------|---------------|
 | ≤ 8192 | low |
 | ≤ 16384 | medium |
 | > 16384 | high |
@@ -555,9 +565,9 @@ v1.2.8+ introduces **model variants** for dynamic thinking configuration. Instea
     "limit": { "context": 200000, "output": 64000 },
     "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
     "variants": {
-      "low": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 8192 } } } },
-      "medium": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 16384 } } } },
-      "max": { "providerOptions": { "google": { "thinkingConfig": { "thinkingBudget": 32768 } } } }
+      "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+      "medium": { "thinkingConfig": { "thinkingBudget": 16384 } },
+      "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
     }
   }
 }
