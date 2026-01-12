@@ -96,7 +96,6 @@ export function normalizeGeminiTools(
         },
       },
       required: ["_placeholder"],
-      additionalProperties: false,
     };
 
     let schema = schemaCandidates[0] as Record<string, unknown> | undefined;
@@ -145,12 +144,10 @@ export function normalizeGeminiTools(
       }
     }
     
-    // Ensure custom has input_schema
     if (newTool.custom && !(newTool.custom as Record<string, unknown>).input_schema) {
       (newTool.custom as Record<string, unknown>).input_schema = { 
         type: "object", 
         properties: {}, 
-        additionalProperties: false 
       };
       toolDebugMissing += 1;
     }
