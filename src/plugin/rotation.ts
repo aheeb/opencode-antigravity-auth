@@ -342,6 +342,10 @@ export class TokenBucketTracker {
       lastUpdated: Date.now(),
     });
   }
+
+  getMaxTokens(): number {
+    return this.config.maxTokens;
+  }
 }
 
 // ============================================================================
@@ -413,9 +417,10 @@ export function selectPriorityQueueAccount(
   }
 
   // 2. Calculate scores
+  const maxTokens = tokenTracker.getMaxTokens();
   const scored = candidates.map(acc => ({
     acc,
-    score: calculatePriorityScore(acc, 50)
+    score: calculatePriorityScore(acc, maxTokens)
   })).sort((a, b) => b.score - a.score);
 
   // 3. Top 30% (min 1, max 5)

@@ -173,6 +173,16 @@ describe("TokenBucketTracker", () => {
       const tracker = new TokenBucketTracker();
       expect(tracker.hasTokens(0)).toBe(true);
     });
+
+    it("getMaxTokens returns configured max tokens", () => {
+      const tracker = new TokenBucketTracker({ maxTokens: 100 });
+      expect(tracker.getMaxTokens()).toBe(100);
+    });
+
+    it("getMaxTokens returns default when not configured", () => {
+      const tracker = new TokenBucketTracker();
+      expect(tracker.getMaxTokens()).toBe(50);
+    });
   });
 
   describe("consume", () => {
