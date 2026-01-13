@@ -440,8 +440,8 @@ export function selectPriorityQueueAccount(
     }
   }
 
-  // Fallback to top score
-  return topCandidates[0]?.acc.index ?? candidates[0]?.index ?? 0;
+  // Fallback to top score (topCandidates is guaranteed non-empty at this point)
+  return topCandidates[0]!.acc.index;
 }
 
 // ============================================================================
