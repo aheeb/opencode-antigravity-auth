@@ -301,22 +301,6 @@ OPENCODE_ANTIGRAVITY_DEBUG=1 opencode   # Enable debug logging
 OPENCODE_ANTIGRAVITY_DEBUG=2 opencode   # Verbose logging
 ```
 
-| Option | Default | What it does |
-|--------|---------|--------------|
-| `quiet_mode` | `false` | Hide toast notifications |
-| `debug` | `false` | Enable debug logging |
-| `session_recovery` | `true` | Auto-recover from tool errors |
-| `auto_resume` | `true` | Auto-send "continue" after recovery |
-| `web_search.default_mode` | `"off"` | Google Search grounding: `"auto"` or `"off"` |
-
-For all options, see [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
-
-**Environment variables:**
-```bash
-OPENCODE_ANTIGRAVITY_DEBUG=1 opencode   # Enable debug logging
-OPENCODE_ANTIGRAVITY_DEBUG=2 opencode   # Verbose logging
-```
-
 ---
 
 ## Troubleshooting

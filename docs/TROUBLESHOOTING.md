@@ -2,6 +2,23 @@
 
 Common issues and solutions for the Antigravity Auth plugin.
 
+> **Quick Reset**: Most issues can be resolved by deleting `~/.config/opencode/antigravity-accounts.json` and running `opencode auth login` again.
+
+---
+
+## Configuration Paths (All Platforms)
+
+OpenCode uses `~/.config/opencode/` on **all platforms** including Windows.
+
+| File | Path |
+|------|------|
+| Main config | `~/.config/opencode/opencode.json` |
+| Accounts | `~/.config/opencode/antigravity-accounts.json` |
+| Plugin config | `~/.config/opencode/antigravity.json` |
+| Debug logs | `~/.config/opencode/antigravity-logs/` |
+
+> **Windows users**: `~` resolves to your user home directory (e.g., `C:\Users\YourName`). Do NOT use `%APPDATA%`.
+
 ---
 
 ## Quick Fixes
@@ -21,6 +38,18 @@ Add this to your `google` provider config:
 
 ### Session errors
 Type `continue` to trigger auto-recovery, or use `/undo` to rollback.
+
+### Configuration Key Typo
+
+The correct key is `plugin` (singular):
+
+```json
+{
+  "plugin": ["opencode-antigravity-auth@beta"]
+}
+```
+
+**Not** `"plugins"` (will cause "Unrecognized key" error).
 
 ---
 
@@ -55,6 +84,66 @@ When using Gemini CLI models, you may see:
 
 ---
 
+## Gemini 3 Models 400 Error ("Unknown name 'parameters'")
+
+**Error:**
+```
+Invalid JSON payload received. Unknown name "parameters" at 'request.tools[0]'
+```
+
+**Causes:**
+- Tool schema incompatibility with Gemini's strict protobuf validation
+- MCP servers with malformed schemas
+- Plugin version regression
+
+**Solutions:**
+1. **Update to latest beta:**
+   ```json
+   { "plugin": ["opencode-antigravity-auth@beta"] }
+   ```
+
+2. **Disable MCP servers** one-by-one to find the problematic one
+
+3. **Add npm override:**
+   ```json
+   { "provider": { "google": { "npm": "@ai-sdk/google" } } }
+   ```
+
+---
+
+## MCP Servers Causing Errors
+
+Some MCP servers have schemas incompatible with Antigravity's strict JSON format.
+
+**Diagnosis:**
+1. Disable all MCP servers in your config
+2. Enable one-by-one until error reappears
+3. Report the specific MCP in a [GitHub issue](https://github.com/NoeFabris/opencode-antigravity-auth/issues)
+
+---
+
+## "All Accounts Rate-Limited" (But Quota Available)
+
+**Cause:** Cascade bug in `clearExpiredRateLimits()` in hybrid mode (fixed in recent beta).
+
+**Solutions:**
+1. Update to latest beta version
+2. If persists, delete accounts file and re-authenticate
+3. Try switching `account_selection_strategy` to `"sticky"` in `antigravity.json`
+
+---
+
+## Infinite `.tmp` Files Created
+
+**Cause:** When account is rate-limited and plugin retries infinitely, it creates many temp files.
+
+**Workaround:**
+1. Stop OpenCode
+2. Clean up: `rm ~/.config/opencode/*.tmp`
+3. Add more accounts or wait for rate limit to expire
+
+---
+
 ## Safari OAuth Callback Fails (macOS)
 
 **Symptoms:**
@@ -86,27 +175,57 @@ If OAuth fails with "Address already in use":
 
 **macOS / Linux:**
 ```bash
-lsof -i :8080
+lsof -i :51121
 kill -9 <PID>
 opencode auth login
 ```
 
 **Windows:**
 ```powershell
-netstat -ano | findstr :8080
+netstat -ano | findstr :51121
 taskkill /PID <PID> /F
 opencode auth login
 ```
 
 ---
 
-## WSL2 / Remote Development
+## WSL2 / Docker / Remote Development
 
 The OAuth callback requires the browser to reach `localhost` on the machine running OpenCode.
 
-- **WSL2:** Configure port forwarding, or use VS Code's port forwarding
-- **SSH:** Use `ssh -L 8080:localhost:8080 user@remote`
-- **Headless servers:** See [issue #119](https://github.com/NoeFabris/opencode-antigravity-auth/issues/119) for manual auth
+<details>
+<summary><b>WSL2</b></summary>
+
+- Use VS Code's port forwarding, or
+- Configure Windows → WSL port forwarding
+
+</details>
+
+<details>
+<summary><b>SSH / Remote</b></summary>
+
+```bash
+ssh -L 51121:localhost:51121 user@remote
+```
+
+</details>
+
+<details>
+<summary><b>Docker / Containers</b></summary>
+
+- OAuth with localhost redirect doesn't work in containers
+- Wait 30s for manual URL flow, or use SSH port forwarding
+
+</details>
+
+---
+
+## Migrating Accounts Between Machines
+
+When copying `antigravity-accounts.json` to a new machine:
+1. Ensure the plugin is installed: `"plugin": ["opencode-antigravity-auth@beta"]`
+2. Copy `~/.config/opencode/antigravity-accounts.json`
+3. If you get "API key missing" error, the refresh token may be invalid — re-authenticate
 
 ---
 
