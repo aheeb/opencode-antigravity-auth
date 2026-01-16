@@ -481,7 +481,7 @@ export function wrapToolsAsFunctionDeclarations(payload: RequestPayload): void {
       ""
     );
     
-    const schema = (
+    const rawSchema = (
       fn?.input_schema ||
       fn?.parameters ||
       fn?.inputSchema ||
@@ -492,6 +492,9 @@ export function wrapToolsAsFunctionDeclarations(payload: RequestPayload): void {
       tool.inputSchema ||
       { type: "OBJECT", properties: {} }
     ) as Record<string, unknown>;
+    
+    // Ensure schema is transformed (handles edge cases where schema wasn't processed)
+    const schema = toGeminiSchema(rawSchema) as Record<string, unknown>;
     
     functionDeclarations.push({
       name,
