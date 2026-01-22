@@ -40,6 +40,13 @@ import { initDiskSignatureCache } from "./plugin/cache";
 import { createProactiveRefreshQueue, type ProactiveRefreshQueue } from "./plugin/refresh-queue";
 import { initLogger, createLogger } from "./plugin/logger";
 import { initHealthTracker, getHealthTracker, initTokenTracker, getTokenTracker } from "./plugin/rotation";
+import {
+  isOpenAIRequest,
+  type OpenAIChatRequest,
+} from "./plugin/openai-compat/types";
+import { transformOpenAIToAntigravity, extractModel, isStreamingRequest } from "./plugin/openai-compat/request-transformer";
+import { transformAntigravityToOpenAI, transformAntigravityError } from "./plugin/openai-compat/response-transformer";
+import { createOpenAIStreamTransformer } from "./plugin/openai-compat/streaming-transformer";
 import type {
   GetAuth,
   LoaderResult,
@@ -841,10 +848,82 @@ export const createAntigravityPlugin = (providerId: string) => async (
         }
       }
 
-      return {
-        apiKey: "",
-        async fetch(input, init) {
-          if (!isGenerativeLanguageRequest(input)) {
+        return {
+          apiKey: "",
+          async fetch(input, init) {
+            // =========================================================================
+            // OpenAI-Compatible Mode Detection
+            // =========================================================================
+            const openaiCompatConfig = config.openai_compat;
+            let isOpenAIMode = false;
+            let openaiRequest: OpenAIChatRequest | null = null;
+            let originalBody: unknown = null;
+
+            // Check if this could be an OpenAI-format request
+            if (openaiCompatConfig?.enabled || openaiCompatConfig?.auto_detect) {
+              try {
+                if (init?.body && typeof init.body === 'string') {
+                  originalBody = JSON.parse(init.body);
+                  if (isOpenAIRequest(originalBody)) {
+                    isOpenAIMode = true;
+                    openaiRequest = originalBody;
+                  }
+                }
+              } catch {
+                // Not JSON or invalid format, continue with normal flow
+              }
+            }
+
+            // If OpenAI mode detected, transform the request
+            if (isOpenAIMode && openaiRequest) {
+              const antigravityBody = transformOpenAIToAntigravity(openaiRequest);
+              const modelName = extractModel(openaiRequest);
+              const isStreaming = isStreamingRequest(openaiRequest);
+              
+              // Build the Antigravity URL from the model
+              // Use the first endpoint as base - projectContext not available here yet
+              const baseEndpoint = ANTIGRAVITY_ENDPOINT_FALLBACKS[0] || 'https://generativelanguage.googleapis.com';
+              const antigravityUrl = `${baseEndpoint}/v1beta/models/${modelName}:${isStreaming ? 'streamGenerateContent' : 'generateContent'}`;
+              
+              // Transform init to use Antigravity format
+              let existingHeaders: Record<string, string> = {};
+              if (init?.headers) {
+                if (init.headers instanceof Headers) {
+                  init.headers.forEach((value, key) => {
+                    existingHeaders[key] = value;
+                  });
+                } else if (Array.isArray(init.headers)) {
+                  for (const [key, value] of init.headers as [string, string][]) {
+                    existingHeaders[key] = value;
+                  }
+                } else {
+                  existingHeaders = { ...init.headers as Record<string, string> };
+                }
+              }
+              
+              const transformedInit: RequestInit = {
+                ...init,
+                method: 'POST',
+                body: JSON.stringify(antigravityBody),
+                headers: {
+                  ...existingHeaders,
+                  'Content-Type': 'application/json',
+                },
+              };
+              
+              // Continue with transformed request
+              input = antigravityUrl;
+              init = transformedInit;
+              
+              // Store model and streaming flag for response transformation
+              (init as any).__openai_compat = {
+                model: modelName,
+                streaming: isStreaming,
+                convert429to400: openaiCompatConfig?.convert_429_to_400 !== false,
+              };
+            }
+
+            if (!isGenerativeLanguageRequest(input)) {
             return fetch(input, init);
           }
 
@@ -1617,6 +1696,41 @@ export const createAntigravityPlugin = (providerId: string) => async (
                       "Tool call/result mismatch - use /compact to fix, or /undo last message",
                       "warning"
                     );
+                  }
+                }
+
+                // =========================================================================
+                // OpenAI-Compatible Response Transformation
+                // =========================================================================
+                const openaiCompatMeta = (init as any)?.__openai_compat;
+                if (openaiCompatMeta) {
+                  const { model, streaming, convert429to400 } = openaiCompatMeta;
+                  
+                  if (streaming && transformedResponse.body) {
+                    // For streaming responses, pipe through the streaming transformer
+                    const openaiStream = transformedResponse.body.pipeThrough(
+                      createOpenAIStreamTransformer(model)
+                    );
+                    
+                    return new Response(openaiStream, {
+                      status: transformedResponse.status,
+                      headers: {
+                        'Content-Type': 'text/event-stream',
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive',
+                      },
+                    });
+                  } else {
+                    // For non-streaming, parse and transform the response
+                    const responseBody = await transformedResponse.json();
+                    const openaiResponse = transformAntigravityToOpenAI(responseBody, model);
+                    
+                    return new Response(JSON.stringify(openaiResponse), {
+                      status: transformedResponse.status,
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    });
                   }
                 }
 
