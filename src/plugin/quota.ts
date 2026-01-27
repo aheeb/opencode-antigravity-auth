@@ -109,7 +109,7 @@ function aggregateQuota(models?: Record<string, FetchAvailableModelEntry>): Quot
     }
     const quotaInfo = entry.quotaInfo;
     const remainingFraction = quotaInfo
-      ? normalizeRemainingFraction(quotaInfo.remainingFraction ?? 0)
+      ? normalizeRemainingFraction(quotaInfo.remainingFraction)
       : undefined;
     const resetTime = quotaInfo?.resetTime;
     const resetTimestamp = parseResetTime(resetTime);
