@@ -1332,7 +1332,8 @@ export const createAntigravityPlugin = (providerId: string) => async (
               continue;
             }
 
-            if (projectContext.auth !== authRecord) {
+            if (projectContext.auth.refresh !== authRecord.refresh || 
+                projectContext.auth.access !== authRecord.access) {
               accountManager.updateFromAuth(account, projectContext.auth);
               authRecord = projectContext.auth;
               try {
